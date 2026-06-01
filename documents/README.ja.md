@@ -208,7 +208,7 @@ GitHub Actions のデフォルトコンパイル領域は 84G で、システム
     sudo mkfs.xfs /dev/github/runner
     sudo mkdir -p /builder
     sudo mount /dev/github/runner /builder
-    sudo chown -R runner.runner /builder
+    sudo chown -R runner:runner /builder
     df -Th
 ```
 
@@ -222,13 +222,13 @@ Armbian システムの [Docker](https://hub.docker.com/u/ophub) イメージの
 
 ```yaml
 - name: Upload Armbian image to Release
-  uses: ncipollo/release-action@main
+  uses: ophub/upload-to-release@main
   if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
   with:
     tag: Armbian_${{ env.ARMBIAN_RELEASE }}_${{ env.PACKAGED_OUTPUTDATE }}
     artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
-    allowUpdates: true
-    token: ${{ secrets.GITHUB_TOKEN }}
+    allow_updates: true
+    gh_token: ${{ secrets.GITHUB_TOKEN }}
     body: |
       These are the Armbian OS image
       * OS information
@@ -581,7 +581,7 @@ armbian-update
 | オプションパラメータ  | デフォルト値        | 選択肢           | 説明                              |
 | -------- | ------------ | ------------- | -------------------------------- |
 | -r       | ophub/kernel | `<owner>/<repo>` | github.com からカーネルをダウンロードするリポジトリを設定  |
-| -u       | 自動        | stable/flippy/beta/rk3588/rk35xx/h6 | 使用するカーネルの [tags サフィックス](https://github.com/ophub/kernel/releases) を設定 |
+| -u       | 自動        | stable/flippy/beta/rk3588/rk35xx | 使用するカーネルの [tags サフィックス](https://github.com/ophub/kernel/releases) を設定 |
 | -k       | 最新版        | カーネルバージョン       | [カーネルバージョン](https://github.com/ophub/kernel/releases/tag/kernel_stable) を設定  |
 | -b       | yes          | yes/no        | カーネル更新時に現在使用中のカーネルを自動バックアップ    |
 | -d       | deb          | tar/deb       | 優先使用するカーネルパッケージ形式を設定。指定形式が存在しない場合、スクリプトは自動的に別の形式を試行します。カスタムドライバをコンパイルする場合は `deb` 形式を推奨。 |
@@ -1510,6 +1510,8 @@ Amlogic デバイスは `/boot/uEnv.txt` ファイルで設定します。Rockch
 - cmdline に `usbcore.usbfs_memory_mb=1024` 設定を追加することで、USBFS メモリバッファをデフォルトの `16 mb` からより大きなサイズに永続的に変更できます（`cat /sys/module/usbcore/parameters/usbfs_memory_mb`）。USB での大容量ファイル転送能力を向上させます。
 
 - cmdline に `usbcore.usb3_disable=1` 設定を追加することで、すべての USB 3.0 デバイスを無効にできます。
+
+- cmdline に `usbcore.autosuspend=-1` 設定を追加することで、USB オートサスペンドを無効にできます（USB デバイスの省電力による切断を防止）；`rootdelay=120` 設定を追加することで、起動時にルートパーティションをマウントする前に 120 秒待機します（USB デバイスが準備完了するまでの時間を確保）；`mitigations=off` 設定を追加することで、CPU 脆弱性の緩和策（Spectre/Meltdown）を無効にし、パフォーマンスを向上させます。
 
 - cmdline に `extraargs=video=HDMI-A-1:1920x1080@60` 設定を追加することで、ビデオ表示モードを 1080p に強制できます。
 

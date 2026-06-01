@@ -208,7 +208,7 @@ GitHub Actions provides 84GB of compile space by default, with approximately 50G
     sudo mkfs.xfs /dev/github/runner
     sudo mkdir -p /builder
     sudo mount /dev/github/runner /builder
-    sudo chown -R runner.runner /builder
+    sudo chown -R runner:runner /builder
     df -Th
 ```
 
@@ -222,13 +222,13 @@ System storage is also configured in the [.github/workflows/build-armbian-arm64-
 
 ```yaml
 - name: Upload Armbian image to Release
-  uses: ncipollo/release-action@main
+  uses: ophub/upload-to-release@main
   if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
   with:
     tag: Armbian_${{ env.ARMBIAN_RELEASE }}_${{ env.PACKAGED_OUTPUTDATE }}
     artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
-    allowUpdates: true
-    token: ${{ secrets.GITHUB_TOKEN }}
+    allow_updates: true
+    gh_token: ${{ secrets.GITHUB_TOKEN }}
     body: |
       These are the Armbian OS image
       * OS information
@@ -582,7 +582,7 @@ armbian-update
 | Optional Parameters | Default Value | Options | Description |
 | -------- | ------------ | ------------- | -------------------------------- |
 | -r | ophub/kernel | `<owner>/<repo>` | Set the repository to download the kernel from github.com |
-| -u | Automatic | stable/flippy/beta/rk3588/rk35xx/h6 | Set the suffix of the used kernel's [tags](https://github.com/ophub/kernel/releases) |
+| -u | Automatic | stable/flippy/beta/rk3588/rk35xx | Set the suffix of the used kernel's [tags](https://github.com/ophub/kernel/releases) |
 | -k | Latest Version | Kernel Version | Set the [Kernel Version](https://github.com/ophub/kernel/releases/tag/kernel_stable) |
 | -b | yes | yes/no | Automatically backup the kernel currently in use when updating the kernel |
 | -d | deb | tar/deb | Set the preferred kernel package format. If unavailable, the script will automatically try the alternative. `deb` is recommended for compiling custom drivers. |
@@ -1517,6 +1517,8 @@ In Amlogic devices, add/modify/delete settings in `/boot/uEnv.txt`. In Rockchip 
 - Adding `usbcore.usbfs_memory_mb=1024` to cmdline increases the USBFS memory buffer from the default `16 mb` (`cat /sys/module/usbcore/parameters/usbfs_memory_mb`), improving large USB file transfers.
 
 - Adding `usbcore.usb3_disable=1` to cmdline disables all USB 3.0 devices.
+
+- Adding `usbcore.autosuspend=-1` to cmdline disables USB auto-suspend (prevents USB devices from powering down to save energy); adding `rootdelay=120` makes the system wait 120 seconds before mounting the root partition at boot (giving USB devices time to become ready); adding `mitigations=off` disables CPU vulnerability mitigations (Spectre/Meltdown), improving performance.
 
 - Adding `extraargs=video=HDMI-A-1:1920x1080@60` to cmdline forces the display to 1080p.
 
